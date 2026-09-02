@@ -1,0 +1,704 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#122029; --panel:#182833; --panel-alt:#1e323e; --line:#32495a; --line-soft:#243947;
+    --text:#ece6d9; --text-dim:#93a7b3;
+    --brass:#c78c40; --brass-dim:#8a6530; --teal:#4fa095; --rust:#c1543c; --green:#5fa873;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;}
+  #root{min-height:100vh;}
+  h1,h2,h3{font-family:'Spectral',serif;font-weight:600;margin:0;}
+  .num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+  button{font-family:'IBM Plex Sans',sans-serif;cursor:pointer;}
+  input,select,textarea{font-family:'IBM Plex Sans',sans-serif;}
+
+  .app{display:flex;min-height:100vh;}
+  .sidebar{width:225px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line-soft);padding:24px 18px;display:flex;flex-direction:column;}
+  .brand .mark{width:32px;height:32px;border:1.5px solid var(--brass);display:flex;align-items:center;justify-content:center;font-family:'Spectral',serif;font-size:15px;color:var(--brass);margin-bottom:9px;}
+  .brand .name-ar{font-size:13px;line-height:1.5;color:var(--text);direction:rtl;font-family:'Spectral',serif;}
+  .brand .name-en{font-size:10px;color:var(--text-dim);margin-top:5px;}
+  nav{display:flex;flex-direction:column;gap:1px;margin-top:30px;}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:9px 9px;color:var(--text-dim);border-left:2px solid transparent;font-size:13px;}
+  .nav-item:hover{color:var(--text);}
+  .nav-item.active{color:var(--brass);border-left-color:var(--brass);background:var(--panel-alt);}
+  .nav-item .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.6;}
+  .sidebar-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--line-soft);font-size:10.5px;color:var(--text-dim);line-height:1.6;}
+
+  .main{flex:1;min-width:0;padding:32px 40px 60px;}
+  .page-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:12px;}
+  .page-head h1{font-size:24px;}
+  .page-sub{color:var(--text-dim);font-size:12px;margin-bottom:26px;}
+
+  .btn{background:transparent;border:1px solid var(--brass-dim);color:var(--brass);padding:8px 15px;font-size:12.5px;border-radius:var(--radius);}
+  .btn:hover{background:rgba(199,140,64,0.1);}
+  .btn.primary{background:var(--brass);color:#122029;border-color:var(--brass);}
+  .btn.primary:hover{background:#d69c52;}
+  .btn.ghost{border-color:var(--line);color:var(--text-dim);}
+  .btn.ghost:hover{color:var(--text);border-color:var(--text-dim);}
+  .btn.small{padding:5px 10px;font-size:11px;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);margin-bottom:32px;}
+  .stat{background:var(--panel);padding:16px 18px;border-top:2px solid var(--accent,var(--brass));}
+  .stat .label{font-size:10.5px;color:var(--text-dim);margin-bottom:9px;letter-spacing:.2px;}
+  .stat .value{font-size:20px;}
+  .stat .sub{font-size:10.5px;color:var(--text-dim);margin-top:5px;}
+
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin:0 0 13px;}
+  .section-title h3{font-size:14.5px;}
+
+  table{width:100%;border-collapse:collapse;}
+  thead th{text-align:left;font-size:10px;letter-spacing:.3px;color:var(--text-dim);font-weight:500;padding:0 12px 9px;border-bottom:1px solid var(--line);}
+  tbody td{padding:11px 12px;border-bottom:1px solid var(--line-soft);font-size:12.5px;vertical-align:middle;}
+  tbody tr:hover{background:rgba(255,255,255,0.015);}
+  td.amt,th.amt{text-align:right;}
+  .status-pill{display:inline-block;padding:3px 9px;font-size:10px;border-radius:20px;border:1px solid;}
+  .status-paid{color:var(--green);border-color:var(--green);}
+  .status-unpaid{color:var(--brass);border-color:var(--brass-dim);}
+  .status-low{color:var(--rust);border-color:var(--rust);}
+  .status-in{color:var(--green);border-color:var(--green);}
+  .status-out{color:var(--rust);border-color:var(--rust);}
+  .row-actions{display:flex;gap:6px;}
+  .icon-btn{background:transparent;border:1px solid var(--line);color:var(--text-dim);width:25px;height:25px;border-radius:var(--radius);font-size:11px;display:flex;align-items:center;justify-content:center;}
+  .icon-btn:hover{color:var(--text);border-color:var(--text-dim);}
+  .empty{padding:36px 10px;text-align:center;color:var(--text-dim);font-size:12.5px;border:1px dashed var(--line);}
+
+  .form-panel{background:var(--panel-alt);border:1px solid var(--line);padding:18px;margin-bottom:20px;display:none;}
+  .form-panel.open{display:block;}
+  .form-grid{display:grid;gap:12px;align-items:end;}
+  .fg-items{grid-template-columns:1.3fr 1fr 1fr 1fr 1fr auto;}
+  .fg-move{grid-template-columns:1.4fr .8fr 1fr 1fr 1.4fr auto;}
+  .fg-cust{grid-template-columns:1.3fr 1.1fr 1fr 1.4fr auto;}
+  .field label{display:block;font-size:10px;color:var(--text-dim);margin-bottom:6px;}
+  .field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);padding:8px 9px;font-size:12.5px;border-radius:var(--radius);}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--brass);}
+
+  .card-block{background:var(--panel);border:1px solid var(--line-soft);padding:20px 22px;margin-bottom:22px;}
+  .pl-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:13px;}
+  .pl-row.total{border-bottom:none;border-top:1px solid var(--line);margin-top:3px;padding-top:14px;font-size:15px;}
+  .pl-row .label{color:var(--text-dim);}
+  .pl-row.total .label{color:var(--text);font-family:'Spectral',serif;}
+  .pl-row .val.neg{color:var(--rust);}
+  .pl-row .val.pos{color:var(--green);}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  .note-box{border-left:2px solid var(--brass-dim);background:var(--panel-alt);padding:12px 15px;font-size:11.5px;color:var(--text-dim);line-height:1.6;margin-top:14px;}
+
+  /* invoice builder */
+  .inv-builder{display:grid;grid-template-columns:1.5fr 1fr;gap:22px;}
+  .line-row{display:grid;grid-template-columns:1.7fr .7fr .9fr .9fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-soft);}
+  .line-row select,.line-row input{background:var(--bg);border:1px solid var(--line);color:var(--text);padding:7px 8px;font-size:12px;border-radius:var(--radius);width:100%;}
+  .inv-summary .pl-row{font-size:12.5px;padding:8px 0;}
+
+  /* printable invoice */
+  .invoice-doc{background:#f4f1e8;color:#1a1a1a;padding:34px;font-family:'IBM Plex Sans',sans-serif;}
+  .invoice-doc h2{font-family:'Spectral',serif;color:#1a1a1a;}
+  .invoice-doc .idoc-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:16px;margin-bottom:18px;}
+  .invoice-doc .idoc-head .ar{direction:rtl;font-family:'Spectral',serif;font-size:15px;}
+  .invoice-doc table{width:100%;border-collapse:collapse;margin:14px 0;}
+  .invoice-doc th{background:#1a1a1a;color:#f4f1e8;text-align:left;padding:8px 10px;font-size:11px;}
+  .invoice-doc td{padding:8px 10px;border-bottom:1px solid #ccc7b8;font-size:12.5px;}
+  .invoice-doc .idoc-totals{width:280px;margin-left:auto;margin-top:10px;}
+  .invoice-doc .idoc-totals div{display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px;}
+  .invoice-doc .idoc-totals .grand{border-top:1.5px solid #1a1a1a;font-size:15px;font-weight:600;margin-top:5px;padding-top:9px;}
+  .idoc-qr{display:flex;gap:20px;align-items:center;margin-top:20px;border-top:1px solid #ccc7b8;padding-top:18px;}
+  .idoc-qr .qr-label{font-size:11px;color:#555;max-width:260px;line-height:1.5;}
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{display:block;position:absolute;top:0;left:0;width:100%;}
+  }
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:960px){.two-col{grid-template-columns:1fr;} .inv-builder{grid-template-columns:1fr;} .stats{grid-template-columns:1fr 1fr;}}
+  @media (max-width:640px){.app{flex-direction:column;} .sidebar{width:100%;flex-direction:row;align-items:center;padding:14px 18px;gap:18px;} nav{flex-direction:row;overflow-x:auto;margin-top:0;} .sidebar-foot{display:none;} .main{padding:20px 16px 50px;} .stats{grid-template-columns:1fr 1fr;} .line-row{grid-template-columns:1fr;}}
+
+  .loading-note{color:var(--text-dim);font-size:12px;padding:20px 0;}
+</style>
+
+<div id="root"></div>
+<div id="printArea"></div>
+
+<script>
+const todayISO = () => new Date().toISOString().slice(0,10);
+const nowIsoTime = () => new Date().toISOString();
+const money = n => (Math.round((n+Number.EPSILON)*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const SAR = n => money(n) + " ر.س";
+
+let state = {
+  tab:'dashboard', loaded:false,
+  items:[], movements:[], customers:[], invoices:[], settings:null,
+  itemFormOpen:false, moveFormOpen:false, custFormOpen:false,
+  invoiceDraft: null,
+};
+
+async function loadAll(){
+  const keys = ['inv_items','inv_movements','inv_customers','inv_invoices','inv_settings'];
+  const defaults = {
+    inv_items: seedItems, inv_movements: ()=>[], inv_customers: seedCustomers,
+    inv_invoices: ()=>[], inv_settings: seedSettings
+  };
+  for(const k of keys){
+    try{
+      const r = await window.storage.get(k, true);
+      const val = r ? JSON.parse(r.value) : defaults[k]();
+      assignState(k, val);
+      if(!r) await window.storage.set(k, JSON.stringify(val), true);
+    }catch(e){
+      const val = defaults[k]();
+      assignState(k, val);
+      await window.storage.set(k, JSON.stringify(val), true);
+    }
+  }
+  state.loaded = true;
+  resetInvoiceDraft();
+  render();
+}
+function assignState(k,v){
+  if(k==='inv_items') state.items=v;
+  if(k==='inv_movements') state.movements=v;
+  if(k==='inv_customers') state.customers=v;
+  if(k==='inv_invoices') state.invoices=v;
+  if(k==='inv_settings') state.settings=v;
+}
+async function persist(key){
+  const map = {items:'inv_items',movements:'inv_movements',customers:'inv_customers',invoices:'inv_invoices',settings:'inv_settings'};
+  const storageKey = map[key];
+  let lastErr = null;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      await window.storage.set(storageKey, JSON.stringify(state[key]), true);
+      hideSaveWarning();
+      return;
+    }catch(e){
+      lastErr = e;
+      await new Promise(r=>setTimeout(r, 400 * (attempt+1)));
+    }
+  }
+  console.error('save failed', key, lastErr);
+  showSaveWarning(key);
+}
+function showSaveWarning(key){
+  let bar = document.getElementById('saveWarning');
+  if(!bar){
+    bar = document.createElement('div');
+    bar.id = 'saveWarning';
+    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c1543c;color:#fff;padding:10px 20px;font-size:12.5px;font-family:IBM Plex Sans,sans-serif;z-index:9999;display:flex;justify-content:space-between;align-items:center;gap:12px;';
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML = `<span>Your last change to "${key}" didn't save — the storage server had a hiccup. It's only in this browser tab right now.</span>
+    <button onclick="retryLastSave('${key}')" style="background:#fff;color:#c1543c;border:none;padding:6px 12px;border-radius:3px;font-size:11.5px;cursor:pointer;">Retry save</button>`;
+}
+function hideSaveWarning(){ const bar = document.getElementById('saveWarning'); if(bar) bar.remove(); }
+function retryLastSave(key){ persist(key); }
+
+function seedSettings(){
+  return {
+    nameAr:'مؤسسة محمود سليمان البلوي لمواد البناء للسباكة والكهرباء',
+    nameEn:'Al-Bulawi Est. for Plumbing & Electrical Building Materials',
+    vatNumber:'310230121600003',
+    address:'Odai Bin Asim St, Al Safa, Jeddah 23455, Saudi Arabia',
+    vatRate:15,
+    invoicePrefix:'INV-',
+    nextNumber:1001
+  };
+}
+function seedItems(){
+  return [
+    {id:'it1', sku:'PVC-110', name:'PVC Pipe 110mm (4m)', unit:'pc', cost:22.00, price:34.50, qty:180, reorder:40},
+    {id:'it2', sku:'CU-2.5', name:'Copper Wire 2.5mm (100m roll)', unit:'roll', cost:210.00, price:295.00, qty:26, reorder:10},
+    {id:'it3', sku:'FIT-BR90', name:'Brass Elbow Fitting 90°', unit:'pc', cost:6.50, price:11.00, qty:12, reorder:30},
+    {id:'it4', sku:'SW-DBL', name:'Double Switch Socket', unit:'pc', cost:9.20, price:16.00, qty:340, reorder:60},
+    {id:'it5', sku:'VLV-BALL', name:'Ball Valve 1"', unit:'pc', cost:14.00, price:23.50, qty:8, reorder:20},
+  ];
+}
+function seedCustomers(){
+  return [
+    {id:'c1', name:'Al Rajhi Contracting Co.', vat:'300112233400003', phone:'0555 112 233', address:'Jeddah Industrial Area'},
+    {id:'c2', name:'Bin Zahim Trading Est.', vat:'310098765400003', phone:'0544 987 654', address:'Al Faisaliyah, Jeddah'},
+    {id:'c3', name:'Makkah Build Partners', vat:'', phone:'0501 223 344', address:'Makkah Road, Jeddah'},
+  ];
+}
+
+function setTab(t){ state.tab=t; if(t==='invoices') resetInvoiceDraft(); render(); }
+
+/* ---------- Inventory ---------- */
+function addItem(e){
+  e.preventDefault(); const f=e.target;
+  const item = {
+    id:'it'+Date.now(), sku:f.sku.value.trim(), name:f.name.value.trim(), unit:f.unit.value.trim()||'pc',
+    cost: parseFloat(f.cost.value)||0, price: parseFloat(f.price.value)||0,
+    qty: parseInt(f.qty.value)||0, reorder: parseInt(f.reorder.value)||0
+  };
+  if(!item.name) return;
+  state.items.unshift(item); state.itemFormOpen=false; persist('items'); render();
+}
+function deleteItem(id){ state.items = state.items.filter(i=>i.id!==id); persist('items'); render(); }
+
+/* ---------- Stock movements ---------- */
+function addMovement(e){
+  e.preventDefault(); const f=e.target;
+  const itemId = f.itemId.value; const type=f.type.value; const qty=parseInt(f.qty.value);
+  if(!itemId || !qty || qty<=0) return;
+  const item = state.items.find(i=>i.id===itemId); if(!item) return;
+  if(type==='out' && qty>item.qty){ alert('Not enough stock: only '+item.qty+' '+item.unit+' available.'); return; }
+  item.qty += (type==='in'?qty:-qty);
+  state.movements.unshift({id:'mv'+Date.now(), itemId, itemName:item.name, type, qty, date: todayISO(), reference: f.reference.value.trim()||'—'});
+  state.moveFormOpen=false; persist('items'); persist('movements'); render();
+}
+function deleteMovement(id){
+  const mv = state.movements.find(m=>m.id===id); if(!mv) return;
+  const item = state.items.find(i=>i.id===mv.itemId);
+  if(item) item.qty += (mv.type==='in' ? -mv.qty : mv.qty);
+  state.movements = state.movements.filter(m=>m.id!==id);
+  persist('items'); persist('movements'); render();
+}
+
+/* ---------- Customers ---------- */
+function addCustomer(e){
+  e.preventDefault(); const f=e.target;
+  const c = {id:'c'+Date.now(), name:f.name.value.trim(), vat:f.vat.value.trim(), phone:f.phone.value.trim(), address:f.address.value.trim()};
+  if(!c.name) return;
+  state.customers.unshift(c); state.custFormOpen=false; persist('customers'); render();
+}
+function deleteCustomer(id){ state.customers = state.customers.filter(c=>c.id!==id); persist('customers'); render(); }
+
+/* ---------- Invoice builder ---------- */
+function resetInvoiceDraft(){
+  state.invoiceDraft = { customerId: state.customers[0]?.id || '', lines: [ {itemId:'', qty:1} ] };
+}
+function draftAddLine(){ state.invoiceDraft.lines.push({itemId:'', qty:1}); render(); }
+function draftRemoveLine(idx){ state.invoiceDraft.lines.splice(idx,1); if(state.invoiceDraft.lines.length===0) state.invoiceDraft.lines.push({itemId:'',qty:1}); render(); }
+function draftSetLine(idx, field, val){ state.invoiceDraft.lines[idx][field] = field==='qty' ? (parseFloat(val)||0) : val; render(); }
+function draftSetCustomer(val){ state.invoiceDraft.customerId = val; render(); }
+
+function computeDraftTotals(){
+  const vatRate = state.settings.vatRate/100;
+  let subtotal = 0;
+  const lines = state.invoiceDraft.lines.map(l=>{
+    const item = state.items.find(i=>i.id===l.itemId);
+    const lineTotal = item ? item.price * (l.qty||0) : 0;
+    subtotal += lineTotal;
+    return {...l, item, lineTotal};
+  });
+  const vat = subtotal * vatRate;
+  const total = subtotal + vat;
+  return {lines, subtotal, vat, total, vatRate};
+}
+
+// --- ZATCA-style TLV Base64 QR (Phase 1 fields: seller name, VAT number, timestamp, invoice total, VAT total) ---
+function tlv(tag, str){
+  const enc = new TextEncoder();
+  const bytes = enc.encode(str);
+  const out = new Uint8Array(2 + bytes.length);
+  out[0] = tag; out[1] = bytes.length; out.set(bytes, 2);
+  return out;
+}
+function buildZatcaQr({sellerName, vatNumber, timestamp, total, vatTotal}){
+  const parts = [
+    tlv(1, sellerName), tlv(2, vatNumber), tlv(3, timestamp),
+    tlv(4, total.toFixed(2)), tlv(5, vatTotal.toFixed(2))
+  ];
+  let len = 0; parts.forEach(p=>len+=p.length);
+  const combined = new Uint8Array(len);
+  let off=0; parts.forEach(p=>{combined.set(p, off); off+=p.length;});
+  let binary=''; combined.forEach(b=>binary+=String.fromCharCode(b));
+  return btoa(binary);
+}
+
+function issueInvoice(){
+  const {lines, subtotal, vat, total, vatRate} = computeDraftTotals();
+  const validLines = lines.filter(l=>l.item && l.qty>0);
+  if(validLines.length===0){ alert('Add at least one item with a quantity.'); return; }
+  for(const l of validLines){
+    if(l.qty > l.item.qty){ alert(`Not enough stock for "${l.item.name}": only ${l.item.qty} ${l.item.unit} available.`); return; }
+  }
+  const customer = state.customers.find(c=>c.id===state.invoiceDraft.customerId);
+  if(!customer){ alert('Choose a customer first.'); return; }
+
+  const number = state.settings.invoicePrefix + state.settings.nextNumber;
+  const timestamp = nowIsoTime();
+  const qrData = buildZatcaQr({sellerName: state.settings.nameAr, vatNumber: state.settings.vatNumber, timestamp, total, vatTotal: vat});
+
+  const invoice = {
+    id:'iv'+Date.now(), number, customerId: customer.id, customerName: customer.name, customerVat: customer.vat,
+    date: todayISO(), timestamp,
+    lines: validLines.map(l=>({itemId:l.item.id, name:l.item.name, qty:l.qty, unitPrice:l.item.price, lineTotal:l.lineTotal})),
+    subtotal, vat, total, vatRate: state.settings.vatRate, qrData
+  };
+
+  validLines.forEach(l=>{
+    l.item.qty -= l.qty;
+    state.movements.unshift({id:'mv'+Date.now()+Math.random().toString(16).slice(2,6), itemId:l.item.id, itemName:l.item.name, type:'out', qty:l.qty, date: todayISO(), reference: number});
+  });
+
+  state.invoices.unshift(invoice);
+  state.settings.nextNumber += 1;
+  persist('items'); persist('movements'); persist('invoices'); persist('settings');
+  resetInvoiceDraft();
+  render();
+  setTimeout(()=>openInvoicePrint(invoice.id), 50);
+}
+
+function openInvoicePrint(id){
+  const inv = state.invoices.find(i=>i.id===id); if(!inv) return;
+  const s = state.settings;
+  const area = document.getElementById('printArea');
+  area.innerHTML = `
+    <div class="invoice-doc">
+      <div class="idoc-head">
+        <div>
+          <div class="ar">${s.nameAr}</div>
+          <div style="font-size:11px;color:#555;margin-top:4px;">${s.nameEn}</div>
+          <div style="font-size:11px;color:#555;margin-top:6px;">${s.address}</div>
+          <div style="font-size:11px;color:#555;">VAT No. ${s.vatNumber}</div>
+        </div>
+        <div style="text-align:right;">
+          <h2 style="font-size:20px;">Tax Invoice</h2>
+          <div style="font-size:12px;margin-top:6px;" class="num">${inv.number}</div>
+          <div style="font-size:11px;color:#555;">${inv.date}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;">
+        <div><strong>Bill to</strong><br>${inv.customerName}${inv.customerVat?('<br>VAT No. '+inv.customerVat):''}</div>
+      </div>
+      <table>
+        <thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr></thead>
+        <tbody>
+          ${inv.lines.map(l=>`<tr><td>${l.name}</td><td class="num">${l.qty}</td><td class="num">${money(l.unitPrice)}</td><td class="num">${money(l.lineTotal)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="idoc-totals">
+        <div><span>Subtotal</span><span class="num">${SAR(inv.subtotal)}</span></div>
+        <div><span>VAT (${inv.vatRate}%)</span><span class="num">${SAR(inv.vat)}</span></div>
+        <div class="grand"><span>Total due</span><span class="num">${SAR(inv.total)}</span></div>
+      </div>
+      <div class="idoc-qr">
+        <div id="qrHolder"></div>
+        <div class="qr-label">Scan to verify this simplified tax invoice. Contains seller name, VAT number, timestamp, invoice total and VAT total per ZATCA Phase 1 QR requirements.</div>
+      </div>
+    </div>
+  `;
+  new QRCode(document.getElementById('qrHolder'), {text: inv.qrData, width:110, height:110, colorDark:'#1a1a1a', colorLight:'#f4f1e8'});
+  window.print();
+}
+function deleteInvoiceRecord(id){
+  if(!confirm('Delete this invoice record? This does not restore stock automatically — adjust via Stock Movements if needed.')) return;
+  state.invoices = state.invoices.filter(i=>i.id!==id); persist('invoices'); render();
+}
+
+/* ---------- Renderers ---------- */
+function renderSidebar(){
+  const items=[['dashboard','Dashboard'],['inventory','Inventory'],['movements','Stock Movements'],['customers','Customers'],['invoices','Tax Invoices'],['report','Monthly Report'],['settings','Settings']];
+  return `
+  <div class="sidebar">
+    <div class="brand">
+      <div class="mark">م</div>
+      <div class="name-ar">${state.settings.nameAr}</div>
+      <div class="name-en">${state.settings.nameEn}</div>
+    </div>
+    <nav>${items.map(([k,l])=>`<div class="nav-item ${state.tab===k?'active':''}" onclick="setTab('${k}')"><span class="dot"></span>${l}</div>`).join('')}</nav>
+    <div class="sidebar-foot">Records are shared with everyone using this app link.<br>Currency: SAR · VAT ${state.settings.vatRate}%</div>
+  </div>`;
+}
+
+function renderDashboard(){
+  const lowStock = state.items.filter(i=>i.qty<=i.reorder);
+  const stockValue = state.items.reduce((s,i)=>s+i.cost*i.qty,0);
+  const thisMonth = todayISO().slice(0,7);
+  const monthInvoices = state.invoices.filter(i=>i.date.slice(0,7)===thisMonth);
+  const monthSales = monthInvoices.reduce((s,i)=>s+i.total,0);
+  const monthVat = monthInvoices.reduce((s,i)=>s+i.vat,0);
+
+  return `
+  <div class="page-head"><h1>Dashboard</h1></div>
+  <div class="page-sub">Overview as of ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+  <div class="stats">
+    <div class="stat" style="--accent:var(--brass)"><div class="label">STOCK VALUE (AT COST)</div><div class="value num">${SAR(stockValue)}</div><div class="sub">${state.items.length} items tracked</div></div>
+    <div class="stat" style="--accent:var(--rust)"><div class="label">LOW STOCK ITEMS</div><div class="value num">${lowStock.length}</div><div class="sub">At or below reorder level</div></div>
+    <div class="stat" style="--accent:var(--teal)"><div class="label">SALES THIS MONTH</div><div class="value num">${SAR(monthSales)}</div><div class="sub">${monthInvoices.length} invoice${monthInvoices.length!==1?'s':''}</div></div>
+    <div class="stat" style="--accent:var(--green)"><div class="label">VAT COLLECTED THIS MONTH</div><div class="value num">${SAR(monthVat)}</div><div class="sub">Owed to ZATCA</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card-block">
+      <div class="section-title"><h3>Reorder soon</h3></div>
+      ${lowStock.length===0?`<div class="empty">Nothing below reorder level</div>`:lowStock.map(i=>`
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;">
+          <span>${i.name}</span><span class="num">${i.qty} ${i.unit} left</span>
+        </div>`).join('')}
+    </div>
+    <div class="card-block">
+      <div class="section-title"><h3>Recent invoices</h3></div>
+      ${state.invoices.slice(0,5).length===0?`<div class="empty">No invoices yet</div>`:state.invoices.slice(0,5).map(i=>`
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;">
+          <span>${i.number} · ${i.customerName}</span><span class="num">${SAR(i.total)}</span>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderInventory(){
+  return `
+  <div class="page-head"><h1>Inventory</h1><button class="btn primary" onclick="state.itemFormOpen=!state.itemFormOpen;render()">${state.itemFormOpen?'Cancel':'+ New Item'}</button></div>
+  <div class="page-sub">${state.items.length} item${state.items.length!==1?'s':''} tracked</div>
+  <div class="form-panel ${state.itemFormOpen?'open':''}">
+    <form class="form-grid fg-items" onsubmit="addItem(event)">
+      <div class="field"><label>Item name</label><input name="name" required placeholder="e.g. PVC Pipe 110mm"></div>
+      <div class="field"><label>SKU</label><input name="sku" placeholder="SKU-000"></div>
+      <div class="field"><label>Unit</label><input name="unit" placeholder="pc / roll / box"></div>
+      <div class="field"><label>Cost price</label><input name="cost" type="number" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="field"><label>Sale price</label><input name="price" type="number" step="0.01" min="0" placeholder="0.00"></div>
+      <button class="btn primary" type="submit" style="grid-column:span 1;">Save</button>
+      <div class="field"><label>Opening qty</label><input name="qty" type="number" min="0" placeholder="0"></div>
+      <div class="field"><label>Reorder level</label><input name="reorder" type="number" min="0" placeholder="0"></div>
+    </form>
+  </div>
+  ${state.items.length===0?`<div class="empty">No inventory items yet.</div>`:`
+  <table>
+    <thead><tr><th>Item</th><th>SKU</th><th>Unit</th><th class="amt">Cost</th><th class="amt">Price</th><th class="amt">On hand</th><th></th><th></th></tr></thead>
+    <tbody>
+      ${state.items.map(i=>`
+        <tr>
+          <td>${i.name}</td>
+          <td class="num">${i.sku||'—'}</td>
+          <td>${i.unit}</td>
+          <td class="amt num">${money(i.cost)}</td>
+          <td class="amt num">${money(i.price)}</td>
+          <td class="amt num">${i.qty}</td>
+          <td>${i.qty<=i.reorder?'<span class="status-pill status-low">Reorder</span>':''}</td>
+          <td><div class="row-actions"><button class="icon-btn" title="Delete" onclick="deleteItem('${i.id}')">✕</button></div></td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`}`;
+}
+
+function renderMovements(){
+  const itemOptions = state.items.map(i=>`<option value="${i.id}">${i.name} (${i.qty} ${i.unit} on hand)</option>`).join('');
+  return `
+  <div class="page-head"><h1>Stock Movements</h1><button class="btn primary" onclick="state.moveFormOpen=!state.moveFormOpen;render()">${state.moveFormOpen?'Cancel':'+ Record Movement'}</button></div>
+  <div class="page-sub">Stock in and stock out history</div>
+  <div class="form-panel ${state.moveFormOpen?'open':''}">
+    <form class="form-grid fg-move" onsubmit="addMovement(event)">
+      <div class="field"><label>Item</label><select name="itemId">${itemOptions}</select></div>
+      <div class="field"><label>Type</label><select name="type"><option value="in">Stock in</option><option value="out">Stock out</option></select></div>
+      <div class="field"><label>Quantity</label><input name="qty" type="number" min="1" required placeholder="0"></div>
+      <div class="field"><label>Reference</label><input name="reference" placeholder="PO #, delivery note…"></div>
+      <div class="field"><label>Date</label><input type="text" value="${todayISO()}" disabled></div>
+      <button class="btn primary" type="submit">Save</button>
+    </form>
+  </div>
+  ${state.movements.length===0?`<div class="empty">No stock movements recorded yet.</div>`:`
+  <table>
+    <thead><tr><th>Item</th><th>Type</th><th class="amt">Qty</th><th>Reference</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      ${state.movements.map(m=>`
+        <tr>
+          <td>${m.itemName}</td>
+          <td><span class="status-pill status-${m.type}">${m.type==='in'?'Stock in':'Stock out'}</span></td>
+          <td class="amt num">${m.qty}</td>
+          <td class="num">${m.reference}</td>
+          <td class="num">${m.date}</td>
+          <td><div class="row-actions"><button class="icon-btn" title="Undo" onclick="deleteMovement('${m.id}')">✕</button></div></td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`}`;
+}
+
+function renderCustomers(){
+  return `
+  <div class="page-head"><h1>Customers</h1><button class="btn primary" onclick="state.custFormOpen=!state.custFormOpen;render()">${state.custFormOpen?'Cancel':'+ New Customer'}</button></div>
+  <div class="page-sub">${state.customers.length} customer${state.customers.length!==1?'s':''} on file</div>
+  <div class="form-panel ${state.custFormOpen?'open':''}">
+    <form class="form-grid fg-cust" onsubmit="addCustomer(event)">
+      <div class="field"><label>Customer name</label><input name="name" required placeholder="Company or individual"></div>
+      <div class="field"><label>VAT number (if any)</label><input name="vat" placeholder="15-digit VAT number"></div>
+      <div class="field"><label>Phone</label><input name="phone" placeholder="05xx xxx xxx"></div>
+      <div class="field"><label>Address</label><input name="address" placeholder="City, area"></div>
+      <button class="btn primary" type="submit">Save</button>
+    </form>
+  </div>
+  ${state.customers.length===0?`<div class="empty">No customers yet.</div>`:`
+  <table>
+    <thead><tr><th>Name</th><th>VAT number</th><th>Phone</th><th>Address</th><th></th></tr></thead>
+    <tbody>
+      ${state.customers.map(c=>`
+        <tr>
+          <td>${c.name}</td><td class="num">${c.vat||'—'}</td><td class="num">${c.phone||'—'}</td><td>${c.address||'—'}</td>
+          <td><div class="row-actions"><button class="icon-btn" title="Delete" onclick="deleteCustomer('${c.id}')">✕</button></div></td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`}`;
+}
+
+function renderInvoices(){
+  const {lines, subtotal, vat, total} = computeDraftTotals();
+  const custOptions = state.customers.map(c=>`<option value="${c.id}" ${c.id===state.invoiceDraft.customerId?'selected':''}>${c.name}</option>`).join('');
+  const itemOptions = ids => state.items.map(i=>`<option value="${i.id}" ${i.id===ids?'selected':''}>${i.name} (${i.qty} ${i.unit})</option>`).join('');
+
+  return `
+  <div class="page-head"><h1>Tax Invoices</h1></div>
+  <div class="page-sub">Create a ZATCA-style simplified tax invoice and pull stock automatically</div>
+
+  <div class="inv-builder">
+    <div class="card-block">
+      <div class="section-title"><h3>New invoice</h3></div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Customer</label>
+        <select onchange="draftSetCustomer(this.value)">${custOptions || '<option>No customers yet — add one first</option>'}</select>
+      </div>
+      ${lines.map((l,idx)=>`
+        <div class="line-row">
+          <select onchange="draftSetLine(${idx},'itemId',this.value)"><option value="">Select item…</option>${itemOptions(l.itemId)}</select>
+          <input type="number" min="1" value="${l.qty}" onchange="draftSetLine(${idx},'qty',this.value)">
+          <div class="num" style="font-size:12px;color:var(--text-dim);">${l.item?money(l.item.price)+' /unit':''}</div>
+          <div class="num" style="font-size:12.5px;">${l.item?money(l.lineTotal):''}</div>
+          <button class="icon-btn" onclick="draftRemoveLine(${idx})">✕</button>
+        </div>`).join('')}
+      <button class="btn ghost small" style="margin-top:12px;" onclick="draftAddLine()">+ Add line</button>
+    </div>
+
+    <div class="card-block inv-summary">
+      <div class="section-title"><h3>Summary</h3></div>
+      <div class="pl-row"><span class="label">Subtotal</span><span class="val num">${SAR(subtotal)}</span></div>
+      <div class="pl-row"><span class="label">VAT (${state.settings.vatRate}%)</span><span class="val num">${SAR(vat)}</span></div>
+      <div class="pl-row total"><span class="label">Total due</span><span class="val num">${SAR(total)}</span></div>
+      <button class="btn primary" style="width:100%;margin-top:16px;" onclick="issueInvoice()" ${state.customers.length===0?'disabled':''}>Issue invoice &amp; print</button>
+      <div class="note-box">Includes a scannable QR code with seller name, VAT number, timestamp, invoice total and VAT total — the ZATCA Phase 1 simplified-invoice fields. Full Phase 2 cryptographic clearance requires direct ZATCA onboarding, which sits outside this app.</div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:32px;"><h3>Issued invoices</h3></div>
+  ${state.invoices.length===0?`<div class="empty">No invoices issued yet.</div>`:`
+  <table>
+    <thead><tr><th>Number</th><th>Customer</th><th>Date</th><th class="amt">VAT</th><th class="amt">Total</th><th></th></tr></thead>
+    <tbody>
+      ${state.invoices.map(i=>`
+        <tr>
+          <td class="num">${i.number}</td><td>${i.customerName}</td><td class="num">${i.date}</td>
+          <td class="amt num">${money(i.vat)}</td><td class="amt num">${money(i.total)}</td>
+          <td><div class="row-actions">
+            <button class="icon-btn" title="Print" onclick="openInvoicePrint('${i.id}')">🖶</button>
+            <button class="icon-btn" title="Delete" onclick="deleteInvoiceRecord('${i.id}')">✕</button>
+          </div></td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`}`;
+}
+
+function renderReport(){
+  const byMonth = {};
+  state.invoices.forEach(i=>{
+    const m = i.date.slice(0,7);
+    if(!byMonth[m]) byMonth[m] = {sales:0, vat:0, count:0};
+    byMonth[m].sales += i.total; byMonth[m].vat += i.vat; byMonth[m].count += 1;
+  });
+  const months = Object.keys(byMonth).sort().reverse();
+
+  return `
+  <div class="page-head"><h1>Monthly Report</h1></div>
+  <div class="page-sub">Sales, VAT and an estimated Zakat contribution by month</div>
+  ${months.length===0?`<div class="empty">No invoices recorded yet — issue an invoice to see monthly totals here.</div>`:`
+  <table>
+    <thead><tr><th>Month</th><th class="amt">Invoices</th><th class="amt">Sales (incl. VAT)</th><th class="amt">VAT collected</th><th class="amt">Est. Zakat (2.5%)</th></tr></thead>
+    <tbody>
+      ${months.map(m=>{
+        const d = byMonth[m];
+        const netSales = d.sales - d.vat;
+        const zakatEst = netSales * 0.025;
+        return `<tr>
+          <td>${m}</td><td class="amt num">${d.count}</td>
+          <td class="amt num">${SAR(d.sales)}</td>
+          <td class="amt num">${SAR(d.vat)}</td>
+          <td class="amt num">${SAR(zakatEst)}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`}
+  <div class="note-box" style="margin-top:20px;">This Zakat figure is a rough directional estimate only — 2.5% of net sales for the month. Actual Zakat is calculated on your full Zakat base (assets, liabilities and working capital across the year), filed with ZATCA, and should be prepared with a qualified accountant. Don't file from this number alone.</div>
+  `;
+}
+
+function renderSettings(){
+  const s = state.settings;
+  return `
+  <div class="page-head"><h1>Settings</h1></div>
+  <div class="page-sub">Company details used on every tax invoice</div>
+  <div class="card-block" style="max-width:520px;">
+    <form class="form-grid" style="grid-template-columns:1fr;" onsubmit="saveSettings(event)">
+      <div class="field"><label>Company name (Arabic)</label><input name="nameAr" value="${s.nameAr}"></div>
+      <div class="field"><label>Company name (English)</label><input name="nameEn" value="${s.nameEn}"></div>
+      <div class="field"><label>VAT registration number</label><input name="vatNumber" value="${s.vatNumber}"></div>
+      <div class="field"><label>Address</label><input name="address" value="${s.address}"></div>
+      <div class="field"><label>VAT rate (%)</label><input name="vatRate" type="number" step="0.1" value="${s.vatRate}"></div>
+      <div class="field"><label>Invoice number prefix</label><input name="invoicePrefix" value="${s.invoicePrefix}"></div>
+      <button class="btn primary" type="submit" style="width:fit-content;">Save settings</button>
+    </form>
+  </div>
+
+  <div class="card-block" style="max-width:520px;">
+    <div class="section-title"><h3>Backup</h3></div>
+    <div class="page-sub" style="margin-bottom:14px;">Download everything — inventory, stock history, customers and invoices — as one file. Do this at month-end, or any time before big changes.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn primary" onclick="exportBackup()">Download full backup (.json)</button>
+      <button class="btn ghost" onclick="exportInvoicesCsv()">Download invoices only (.csv)</button>
+    </div>
+    <div class="note-box">To keep a copy in Google Drive: download the backup, then bring the file back to this chat and ask me to save it to Drive — I'll upload it once you've connected your account.</div>
+  </div>`;
+}
+function exportBackup(){
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    company: state.settings.nameEn,
+    settings: state.settings,
+    items: state.items,
+    movements: state.movements,
+    customers: state.customers,
+    invoices: state.invoices
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `backup-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function exportInvoicesCsv(){
+  const rows = [['Invoice #','Date','Customer','VAT Number','Subtotal','VAT','Total']];
+  state.invoices.forEach(i=>rows.push([i.number, i.date, i.customerName, i.customerVat||'', i.subtotal.toFixed(2), i.vat.toFixed(2), i.total.toFixed(2)]));
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `invoices-${todayISO()}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function saveSettings(e){
+  e.preventDefault(); const f=e.target;
+  state.settings.nameAr=f.nameAr.value; state.settings.nameEn=f.nameEn.value;
+  state.settings.vatNumber=f.vatNumber.value; state.settings.address=f.address.value;
+  state.settings.vatRate=parseFloat(f.vatRate.value)||15; state.settings.invoicePrefix=f.invoicePrefix.value||'INV-';
+  persist('settings'); render();
+}
+
+function render(){
+  const root = document.getElementById('root');
+  if(!state.loaded){ root.innerHTML = `<div class="app"><div class="main"><div class="loading-note">Loading your books…</div></div></div>`; return; }
+  let content='';
+  if(state.tab==='dashboard') content = renderDashboard();
+  else if(state.tab==='inventory') content = renderInventory();
+  else if(state.tab==='movements') content = renderMovements();
+  else if(state.tab==='customers') content = renderCustomers();
+  else if(state.tab==='invoices') content = renderInvoices();
+  else if(state.tab==='report') content = renderReport();
+  else if(state.tab==='settings') content = renderSettings();
+  root.innerHTML = `<div class="app">${renderSidebar()}<div class="main">${content}</div></div>`;
+}
+
+render();
+loadAll();
+</script>
